@@ -22,6 +22,14 @@ export interface MovementRow {
   sourceRowNumber: number;
 }
 
+export interface MaterialGuideItem {
+  materialCode: string;
+  materialNameRaw: string;
+  autoShortName: string;
+  manualShortName?: string;
+  lastUpdated: number;
+}
+
 export interface ImportPreview {
   headers: string[];
   rows: string[][];
