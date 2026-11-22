@@ -10,8 +10,7 @@ export const FIELD_ALIASES: Record<string, string[]> = {
   unit: ["الوحده", "الوحدة", "وحده", "unit"],
   unitPrice: ["السعر", "سعر الوحده", "سعر الوحدة", "unit price", "price"],
   totalValue: ["القيمه", "القيمة", "القيمه الاجماليه", "القيمة الإجمالية", "الاجمالي", "الإجمالي", "total", "value"],
-  agentName: ["المندوب", "اسم المندوب", "agent", "salesman"],
-  costCenter: ["مركز الكلفه", "مركز الكلفة", "cost center"],
+  agentName: ["المندوب", "اسم المندوب", "agent", "salesman", "مركز الكلفه", "مركز الكلفة", "cost center"],
   regionName: ["المنطقه", "المنطقة", "اسم المنطقه", "اسم المنطقة", "المنطقه الافتراضي", "المنطقة (الافتراضي)", "region", "area"],
 };
 
@@ -26,6 +25,5 @@ export const FIELD_LABELS: Record<string, string> = {
   unitPrice: "السعر",
   totalValue: "القيمة",
   agentName: "المندوب / مركز الكلفة",
-  costCenter: "مركز الكلفة",
   regionName: "المنطقة",
 };

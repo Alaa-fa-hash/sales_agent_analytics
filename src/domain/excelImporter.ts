@@ -3,7 +3,7 @@ import { FIELD_ALIASES, FIELD_LABELS, REQUIRED_FIELDS } from "./constants";
 import { extractShortMaterialName } from "./materialName";
 import { ImportResult, MovementRow } from "./types";
 import { parseExcelDate } from "../utils/dates";
-import { normalizeCode, normalizeCostCenter, normalizeHeader } from "../utils/normalize";
+import { normalizeAgentName, normalizeCode, normalizeHeader } from "../utils/normalize";
 import { parseNumber } from "../utils/numbers";
 
 const PREPARED: Record<string, string[]> = Object.fromEntries(
@@ -47,10 +47,7 @@ function detectPurchaseClass(materialName: string, invoiceNo: string): MovementR
   return "unknown";
 }
 
-export function importMovementsFromExcel(binary: string, inputType: "binary" | "base64" = "binary"): ImportResult {
-  const workbook = XLSX.read(binary, { type: inputType, cellDates: true });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: false, defval: "" });
+function parseMovementsFromRows(rows: unknown[][]): ImportResult {
   const header = detectHeaderRow(rows);
   if (!header) throw new Error("لم يتم التعرف على صف العناوين ضمن أول 10 صفوف.");
 
@@ -62,6 +59,7 @@ export function importMovementsFromExcel(binary: string, inputType: "binary" | "
     if (!code) return;
     const name = String(row[header.columnMap.materialName] ?? "").trim();
     const invoiceNo = String(row[header.columnMap.invoiceNo] ?? "").trim();
+    const rawAgent = String(row[header.columnMap.agentName] ?? "").trim();
     movements.push({
       id: `mv-${index + 1}`,
       date: parseExcelDate(row[header.columnMap.date]),
@@ -70,8 +68,8 @@ export function importMovementsFromExcel(binary: string, inputType: "binary" | "
       materialCode: code,
       materialNameRaw: name,
       materialShortName: extractShortMaterialName(name),
-      agentName: String(row[header.columnMap.agentName] ?? "").trim(),
-      costCenter: normalizeCostCenter(row[header.columnMap.costCenter]),
+      agentNameRaw: rawAgent,
+      agentName: normalizeAgentName(rawAgent),
       regionName: String(row[header.columnMap.regionName] ?? "").trim(),
       movementType: detectMovementType(invoiceNo),
       quantity: parseNumber(row[header.columnMap.quantity]),
@@ -92,4 +90,15 @@ export function importMovementsFromExcel(binary: string, inputType: "binary" | "
   const preview = dataRows.filter(row => row.some(cell => cell !== "" && cell != null)).slice(0, 5).map(row => headers.map((_, i) => String(row[i] ?? "")));
 
   return { movements, columnMap: header.columnMap, headerRowIndex: header.rowIndex, missingRequired, optionalMissing, preview: { headers, rows: preview } };
+}
+
+export function importMovementsFromAOA(rows: unknown[][]): ImportResult {
+  return parseMovementsFromRows(rows);
+}
+
+export function importMovementsFromExcel(binary: string, inputType: "binary" | "base64" = "binary"): ImportResult {
+  const workbook = XLSX.read(binary, { type: inputType, cellDates: true });
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: false, defval: "" });
+  return parseMovementsFromRows(rows);
 }

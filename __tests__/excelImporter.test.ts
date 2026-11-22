@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx-js-style";
-import { importMovementsFromExcel } from "../src/domain/excelImporter";
+import { importMovementsFromAOA, importMovementsFromExcel } from "../src/domain/excelImporter";
+import { normalizeAgentName } from "../src/utils/normalize";
 
 function binaryWorkbook(rows: unknown[][]): string {
   const sheet = XLSX.utils.aoa_to_sheet(rows);
@@ -65,12 +66,39 @@ describe("excelImporter", () => {
     expect(result.columnMap.invoiceNo).toBe(1);
   });
 
-  it('strips "مركز كلفة " prefix from cost center', () => {
+  it('strips "مركز كلفة " prefix from the agent name', () => {
     const result = importMovementsFromExcel(binaryWorkbook([
       ["التاريخ", "الفاتورة", "رمز المادة", "الكمية", "مركز الكلفة"],
       ["2026-10-01", "1", "0002", 1, "مركز كلفة بهجت نقاوة"],
     ]));
-    expect(result.movements[0].costCenter).toBe("بهجت نقاوة");
-    expect(result.movements[0].agentName).toBe("");
+    expect(result.movements[0].agentNameRaw).toBe("مركز كلفة بهجت نقاوة");
+    expect(result.movements[0].agentName).toBe("بهجت نقاوة");
+  });
+
+  it("splits agentNameRaw and normalizes agentName", () => {
+    const result = importMovementsFromAOA([
+      ["التاريخ", "الفاتورة", "اسم الزبون", "رمز المادة", "الكمية", "مركز الكلفة"],
+      ["2026-09-15", "مبيع: 1", "زبون أ", "0002", "-1", "مركز كلفة بهجت نقاوة"],
+    ]);
+    expect(result.movements[0].agentNameRaw).toBe("مركز كلفة بهجت نقاوة");
+    expect(result.movements[0].agentName).toBe("بهجت نقاوة");
+  });
+
+  it("explicit agent column takes precedence over the agent alias", () => {
+    const result = importMovementsFromAOA([
+      ["التاريخ", "الفاتورة", "اسم الزبون", "رمز المادة", "الكمية", "المندوب", "مركز الكلفة"],
+      ["2026-09-15", "مبيع: 1", "زبون أ", "0002", "-1", "أحمد", "مركز كلفة بهجت نقاوة"],
+    ]);
+    expect(result.movements[0].agentName).toBe("أحمد");
+  });
+
+  it("normalizeAgentName handles edge cases", () => {
+    expect(normalizeAgentName("")).toBe("");
+    expect(normalizeAgentName("   ")).toBe("");
+    expect(normalizeAgentName("مركز كلفة بهجت نقاوة")).toBe("بهجت نقاوة");
+    expect(normalizeAgentName("مركز كلفه ابي خليل")).toBe("ابي خليل");
+    expect(normalizeAgentName("مركز الكلفة بهجت")).toBe("مركز الكلفة بهجت");
+    expect(normalizeAgentName("cost center John")).toBe("John");
+    expect(normalizeAgentName("بهجت نقاوة")).toBe("بهجت نقاوة");
   });
 });

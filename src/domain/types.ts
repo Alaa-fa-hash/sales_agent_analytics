@@ -9,8 +9,8 @@ export interface MovementRow {
   materialCode: string;
   materialNameRaw: string;
   materialShortName: string;
+  agentNameRaw: string;
   agentName: string;
-  costCenter: string;
   regionName: string;
   movementType: MovementType;
   quantity: number;

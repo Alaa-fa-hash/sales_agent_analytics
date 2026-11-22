@@ -13,10 +13,10 @@ export const normalizeHeader = (v: unknown): string =>
 
 export const normalizeCode = (v: unknown): string => String(v ?? "").trim();
 
-export const normalizeCostCenter = (v: unknown): string =>
+export const normalizeAgentName = (v: unknown): string =>
   String(v ?? "")
     .trim()
     .replace(/^مركز\s+كلفة\s+/u, "")
-    .replace(/^مركز\s+الكلفة\s+/u, "")
+    .replace(/^مركز\s+كلفه\s+/u, "")
     .replace(/^cost\s+center\s+/i, "")
     .trim();
