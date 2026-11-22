@@ -18,9 +18,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - uses: android-actions/setup-android@v3
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
+          accept-android-sdk-licenses: true
       - run: npm ci
-      - run: mkdir -p android/app/src/main/assets android/app/src/main/res
       - run: npx react-native bundle --entry-file=index.js --platform=android --dev=false --bundle-output=android/app/src/main/assets/index.android.bundle --assets-dest=android/app/src/main/res
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
